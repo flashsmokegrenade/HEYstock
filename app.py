@@ -16,7 +16,7 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 # 1. 페이지 설정 & Apple HIG 스타일 타이포그래피 CSS
 # ==============================================================================
 st.set_page_config(
-    page_title="BBstock AI Research & Strategy",
+    page_title="BBstock AI Research & Strategic Intelligence",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -33,40 +33,41 @@ st.markdown("""
     .decision-container {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         background: rgba(255, 255, 255, 0.04);
-        padding: 5px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
     .decision-label {
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 12.5px;
+        font-weight: 600;
         color: #9e9e9e;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
     .decision-pill {
         font-size: 13px;
         font-weight: 700;
-        padding: 3px 12px;
+        padding: 4px 14px;
         border-radius: 12px;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
     }
-    .pill-hold { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .pill-buy { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .pill-sell { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .pill-hold { background-color: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .pill-buy { background-color: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .pill-sell { background-color: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
 
     /* 전략 및 본문 카드 */
     .strategy-card {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 8px;
-        padding: 16px 20px;
+        padding: 18px 22px;
         font-size: 14.5px;
-        line-height: 1.68;
+        line-height: 1.7;
         color: #e0e0e0;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
     }
 
     /* 도메인 점수 태그 */
@@ -82,6 +83,18 @@ st.markdown("""
         margin-top: 8px;
         margin-bottom: 8px;
     }
+
+    /* 법적 면책 고지 배너 */
+    .disclaimer-banner {
+        margin-top: 36px;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        font-size: 12px;
+        color: #888888;
+        line-height: 1.6;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,7 +102,7 @@ st.markdown("""
 # 2. 전역 상태 관리 & 데이터 캐싱
 # ==============================================================================
 if "active_ticker" not in st.session_state:
-    st.session_state["active_ticker"] = "AXON"
+    st.session_state["active_ticker"] = "GOOG"
 
 if "analysis_task" not in st.session_state:
     st.session_state["analysis_task"] = {
@@ -165,27 +178,29 @@ def _run_analysis_worker(task_dict: dict, ticker: str, date_str: str):
         task_dict["error_msg"] = str(e)
 
 # ==============================================================================
-# 4. 상태 기반 정밀 섹션 파서 (잘림 없는 전체 텍스트 보존)
+# 4. 상태 기반 정밀 섹션 파서 (신규 헤더 & 레거시 동시 지원)
 # ==============================================================================
 def parse_full_report_statefully(raw_text: str, fallback_ticker: str = "UNKNOWN") -> dict:
     if not raw_text:
         return {
             "ticker": fallback_ticker,
-            "decision": "HOLD",
+            "decision": "NEUTRAL",
+            "bias_label": "신호 혼재 및 관망",
             "final_strategy": "리포트 내용이 없습니다.",
             "scores": {"Fundamental": 50, "Technical": 50, "Sentiment": 50, "News": 50},
             "domains": {},
             "cleaned_full": ""
         }
 
-    # 주요 상위 섹션 정의 (정규식)
+    # 주요 상위 섹션 정의 (컴플라이언스 신규 헤더 Integrated Market Perspectives 최우선 반영)
     section_patterns = [
         (re.compile(r'^(?:#+\s*)?(?:past_context|instrument_context|trade_date|sender|company_of_interest|asset_type)\b', re.I), "ignore"),
         (re.compile(r'^(?:#+\s*)?(?:technical\s*(?:analysis)?(?:\s*analysis)?|market_report)\b', re.I), "technical"),
         (re.compile(r'^(?:#+\s*)?(?:fundamental\s*(?:analysis)?(?:\s*analysis)?)\b', re.I), "fundamental"),
         (re.compile(r'^(?:#+\s*)?(?:news\s*(?:analysis)?(?:\s*analysis)?)\b', re.I), "news"),
         (re.compile(r'^(?:#+\s*)?(?:sentiment\s*(?:analysis)?(?:\s*analysis)?)\b', re.I), "sentiment"),
-        (re.compile(r'^(?:#+\s*)?(?:final_trade_decision|final\s*execution|최종\s*종합\s*투자\s*보고서|investment_plan)\b', re.I), "final_strategy"),
+        # 신규 Integrated Market Perspectives 및 Multi-Agent Consensus, 레거시 헤더 포괄
+        (re.compile(r'^(?:#+\s*)?(?:integrated\s*market\s*perspectives|multi-agent\s*consensus|final_trade_decision|final\s*execution|최종\s*종합|investment_plan)\b', re.I), "final_strategy"),
         (re.compile(r'^(?:#+\s*)?(?:trader_investment_plan|trader(?:\'s)?\s*(?:initial\s*)?strategy)\b', re.I), "trader_plan")
     ]
 
@@ -220,27 +235,49 @@ def parse_full_report_statefully(raw_text: str, fallback_ticker: str = "UNKNOWN"
 
     sec_texts = {k: "\n".join(v).strip() for k, v in sections.items()}
 
-    # 최종 전략 텍스트 합성
+    # 최종 요약 텍스트 합성
     strategy_parts = []
     if sec_texts["final_strategy"]:
         strategy_parts.append(sec_texts["final_strategy"])
     if sec_texts["trader_plan"]:
-        strategy_parts.append(f"### Trader Plan\n{sec_texts['trader_plan']}")
+        strategy_parts.append(f"### Trader Perspective\n{sec_texts['trader_plan']}")
     if not strategy_parts and sec_texts["general"]:
         strategy_parts.append(sec_texts["general"])
 
     combined_strategy = "\n\n".join(strategy_parts).strip()
 
-    # 최종 투자의견 추출
-    decision = "HOLD"
-    dec_m = (
-        re.search(r'FINAL TRANSACTION PROPOSAL:\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
-        re.search(r'Recommendation\s*[:：]\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
-        re.search(r'최종\s*결정\s*[:：]\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
-        re.search(r'\b(BUY|HOLD|SELL|UNDERWEIGHT|OVERWEIGHT)\b', raw_text)
-    )
-    if dec_m:
-        decision = dec_m.group(1).upper().strip()
+    # 컨센서스 및 관점 추출 (MULTI-AGENT CONSENSUS 및 레거시 태그 병행 파싱)
+    decision = "NEUTRAL"
+    bias_label = "신호 혼재 및 관망"
+
+    cons_m = re.search(r'MULTI-AGENT CONSENSUS:\s*\*\*?([A-Za-z /_\-]+)\*\*?', raw_text, re.IGNORECASE)
+    bias_m = re.search(r'종합\s*(?:분석\s*)?관점\s*[:：]\s*\*\*?([^\n\*]+)\*\*?', raw_text, re.IGNORECASE)
+
+    if cons_m:
+        decision = cons_m.group(1).upper().strip()
+        if bias_m:
+            bias_label = bias_m.group(1).strip()
+        else:
+            if any(w in decision for w in ["BULLISH", "BUY", "OVERWEIGHT"]):
+                bias_label = "상승 신호 우세"
+            elif any(w in decision for w in ["BEARISH", "SELL", "UNDERWEIGHT"]):
+                bias_label = "하방 리스크 경계"
+            else:
+                bias_label = "신호 혼재 및 균형"
+    else:
+        # 레거시 폴백 탐색
+        dec_m = (
+            re.search(r'FINAL TRANSACTION PROPOSAL:\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
+            re.search(r'Recommendation\s*[:：]\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
+            re.search(r'최종\s*(?:투자의견|결정)\s*[:：]\s*\*\*?([A-Za-z_ ]+)\*\*?', raw_text, re.IGNORECASE) or
+            re.search(r'\b(BUY|HOLD|SELL|UNDERWEIGHT|OVERWEIGHT)\b', raw_text)
+        )
+        if dec_m:
+            decision = dec_m.group(1).upper().strip()
+            if any(w in decision for w in ["BUY", "OVERWEIGHT"]):
+                bias_label = "상승 신호 우세"
+            elif any(w in decision for w in ["SELL", "UNDERWEIGHT"]):
+                bias_label = "하방 리스크 경계"
 
     # 각 도메인 점수 및 텍스트 빌드
     def build_domain_info(sec_key, default_bull):
@@ -268,27 +305,40 @@ def parse_full_report_statefully(raw_text: str, fallback_ticker: str = "UNKNOWN"
         }
 
     domains = {
-        "Technical": build_domain_info("technical", 48),
-        "News": build_domain_info("news", 46),
-        "Sentiment": build_domain_info("sentiment", 55),
+        "Technical": build_domain_info("technical", 50),
+        "News": build_domain_info("news", 50),
+        "Sentiment": build_domain_info("sentiment", 50),
         "Fundamental": build_domain_info("fundamental", 50)
     }
 
     scores = {k: v["bull"] for k, v in domains.items()}
 
-    # 다운로드용 정제된 전체 텍스트 생성
-    clean_download_blocks = []
-    clean_download_blocks.append(f"=== {fallback_ticker} AI FINAL INVESTMENT REPORT ===\nDate: {datetime.date.today()}\nDecision: {decision}\n")
+    # TXT 다운로드 파일 조립
+    clean_download_blocks = [
+        f"=== {fallback_ticker} MULTI-AGENT RESEARCH & CONSENSUS REPORT ===",
+        f"Date: {datetime.date.today()}",
+        f"Multi-Agent Consensus: {decision} ({bias_label})\n"
+    ]
     if combined_strategy:
-        clean_download_blocks.append(f"--- [FINAL STRATEGY & RISK EVALUATION] ---\n{combined_strategy}\n")
+        clean_download_blocks.append(f"--- [INTEGRATED MARKET PERSPECTIVES & SCENARIOS] ---\n{combined_strategy}\n")
     for d_name, d_val in domains.items():
         clean_download_blocks.append(f"--- [{d_name.upper()} ANALYSIS (Bull: {d_val['bull']} / Bear: {d_val['bear']})] ---\n{d_val['text']}\n")
+
+    clean_download_blocks.append(
+        "--- [LEGAL DISCLAIMER] ---\n"
+        "This report is an automated quantitative research summary synthesized by AI multi-agents "
+        "based on publicly available market data. It does NOT constitute financial advice or trade recommendations.\n"
+        "본 보고서는 AI 멀티 에이전트 시스템이 공시 데이터 및 기술 지표를 바탕으로 자동 생성한 "
+        "정량적 관측 요약본이며, 금융투자상품의 매수/매도를 권유하거나 투자 자문을 제공하지 않습니다. "
+        "모든 투자 판단과 책임은 투자자 본인에게 있습니다."
+    )
 
     cleaned_full_download = "\n".join(clean_download_blocks)
 
     return {
         "ticker": fallback_ticker,
         "decision": decision,
+        "bias_label": bias_label,
         "final_strategy": combined_strategy,
         "scores": scores,
         "domains": domains,
@@ -349,7 +399,7 @@ st.sidebar.subheader("📂 기존 리포트 불러오기")
 
 report_files = (
     glob.glob("stock_db/**/*.txt", recursive=True) + 
-    glob.glob("stock_db/**/*.md", recursive=True) +
+    glob.glob("stock_db/**/*.md", recursive=True) + 
     glob.glob("results/**/*.txt", recursive=True) + 
     glob.glob("results/**/*.md", recursive=True)
 )
@@ -400,7 +450,7 @@ current_ticker = st.session_state["active_ticker"]
 # ==============================================================================
 # 7. 메인 대시보드 화면
 # ==============================================================================
-st.title(f"📊 {current_ticker} AI Research & Strategic Overview")
+st.title(f"📊 {current_ticker} AI Research & Strategic Intelligence")
 
 # ------------------------------------------------------------------------------
 # 섹션 A: 독립 실시간 시세 차트
@@ -431,14 +481,14 @@ def render_chart_component(ticker: str):
         fig = build_interactive_chart(df, ticker)
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info(f"💡 {ticker} 시세 데이터를 조회할 수 없습니다. Massive API 설정을 확인하세요.")
+        st.info(f"💡 {ticker} 시세 데이터를 조회할 수 없습니다. Market Data 설정을 확인하세요.")
 
 render_chart_component(current_ticker)
 
 st.markdown("---")
 
 # ------------------------------------------------------------------------------
-# 섹션 B: 핵심 투자 전략 리포트 & 4대 도메인별 세부 분석
+# 섹션 B: 종합 리서치 리포트 & 4대 도메인별 세부 분석
 # ------------------------------------------------------------------------------
 task = st.session_state["analysis_task"]
 is_running = (task["status"] == "running")
@@ -470,26 +520,31 @@ def render_report_component(ticker: str):
     if report_text:
         parsed = parse_full_report_statefully(report_text, fallback_ticker=ticker)
 
-        # 1. 헤더: 투자의견 배지 & 리포트 TXT 다운로드 버튼
+        # 1. 헤더: 컨센서스 배지 & 리포트 TXT 다운로드 버튼
         head_l, head_r = st.columns([1.5, 1])
         with head_l:
-            st.subheader("📑 AI 애널리스트 최종 종합 전략 리포트")
+            st.subheader("📑 AI 멀티 에이전트 종합 리서치 요약")
         with head_r:
             today_str = datetime.date.today().strftime("%Y%m%d")
             st.download_button(
                 label="📥 리포트 전문 (.txt) 다운로드",
                 data=parsed["cleaned_full"],
-                file_name=f"{ticker}_AI_Investment_Report_{today_str}.txt",
+                file_name=f"{ticker}_AI_Research_Report_{today_str}.txt",
                 mime="text/plain",
                 use_container_width=True
             )
 
         dec = parsed["decision"]
+        bias_lbl = parsed["bias_label"]
         pill_class = "pill-hold"
-        if "BUY" in dec or "OVERWEIGHT" in dec:
+        
+        # 배지 색상 매핑
+        if any(w in dec for w in ["BUY", "OVERWEIGHT", "BULLISH"]):
             pill_class = "pill-buy"
-        elif "SELL" in dec or "UNDERWEIGHT" in dec:
+        elif any(w in dec for w in ["SELL", "UNDERWEIGHT", "BEARISH"]):
             pill_class = "pill-sell"
+
+        display_badge_text = f"{dec} ({bias_lbl})" if bias_lbl else dec
 
         # 2. 요약 + 레이더 차트
         r_col1, r_col2 = st.columns([1.2, 0.8])
@@ -497,13 +552,13 @@ def render_report_component(ticker: str):
             st.markdown(
                 f"""
                 <div class="decision-container">
-                    <span class="decision-label">FINAL DECISION</span>
-                    <span class="decision-pill {pill_class}">{dec}</span>
+                    <span class="decision-label">MULTI-AGENT CONSENSUS</span>
+                    <span class="decision-pill {pill_class}">{display_badge_text}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
-            # 최종 전략 전문 본문
+            # 종합 관점 및 시장 레짐 서술
             st.markdown(
                 f"""
                 <div class="strategy-card">
@@ -514,14 +569,14 @@ def render_report_component(ticker: str):
             )
 
         with r_col2:
-            st.markdown("<div style='text-align: center; font-size: 13px; color: #888; margin-bottom: 4px;'><b>4대 도메인 강세 밸런스 레이더</b></div>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; font-size: 13px; color: #888; margin-bottom: 4px;'><b>4대 도메인 신호 밸런스 레이더</b></div>", unsafe_allow_html=True)
             radar_fig = create_radar_chart(parsed["scores"], ticker)
             st.plotly_chart(radar_fig, use_container_width=True)
 
         st.markdown("---")
 
         # 3. 도메인별 2x2 카드 (잘림 없는 전체 텍스트 렌더링)
-        st.markdown("### 🔍 4대 도메인별 세부 분석 및 에이전트 리포트")
+        st.markdown("### 🔍 4대 도메인별 세부 분석 및 관측 데이터")
 
         d_col1, d_col2 = st.columns(2)
 
@@ -535,10 +590,10 @@ def render_report_component(ticker: str):
                 )
                 st.markdown(tech["text"])
 
-        # 뉴스 & 이벤트 분석 카드
+        # 뉴스 & 매크로 분석 카드
         with d_col2:
             news = parsed["domains"]["News"]
-            with st.expander("📰 뉴스 및 이벤트 분석 (News Analysis)", expanded=True):
+            with st.expander("📰 뉴스 및 매크로 분석 (Macro & News)", expanded=True):
                 st.markdown(
                     f'<div class="score-badge">Bull Score: 📈 <b>{news["bull"]}</b> / Bear: 📉 <b>{news["bear"]}</b></div>',
                     unsafe_allow_html=True
@@ -550,7 +605,7 @@ def render_report_component(ticker: str):
         # 소셜 심리 분석 카드
         with d_col3:
             sent = parsed["domains"]["Sentiment"]
-            with st.expander("💬 소셜 심리 분석 (Sentiment Analysis)", expanded=True):
+            with st.expander("💬 소셜 심리 분석 (Social Sentiment)", expanded=True):
                 st.markdown(
                     f'<div class="score-badge">Bull Score: 📈 <b>{sent["bull"]}</b> / Bear: 📉 <b>{sent["bear"]}</b></div>',
                     unsafe_allow_html=True
@@ -566,6 +621,19 @@ def render_report_component(ticker: str):
                     unsafe_allow_html=True
                 )
                 st.markdown(fund["text"])
+
+        # 4. 하단 고정 법적 면책 고지 배너 (Regulatory Disclaimer)
+        st.markdown(
+            """
+            <div class="disclaimer-banner">
+                ⚠️ <b>법적 고지 (Regulatory Disclaimer)</b><br>
+                본 대시보드가 제공하는 분석 요약, 통계 지표 및 에이전트 리포트는 공개 시장 데이터를 바탕으로 알고리즘이 자동 생성한 정량 참고 자료입니다. 
+                어떠한 경우에도 금융투자상품의 매매 권유나 개별 투자 자문을 제공하지 않으며, 특정 수익률이나 원금 보전을 보장하지 않습니다. 
+                모든 투자 결정과 그에 따른 책임은 투자자 본인에게 있습니다.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     else:
         st.info("👈 좌측 사이드바에서 티커를 입력하고 **[🚀 AI 심층 분석 실행]** 버튼을 누르면 새로운 분석 리포트가 생성됩니다.")

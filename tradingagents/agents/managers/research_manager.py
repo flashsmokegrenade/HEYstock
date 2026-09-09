@@ -1,4 +1,4 @@
-"""Research Manager: turns the bull/bear debate into a structured investment plan for the trader."""
+"""Research Manager: synthesizes the bull/bear debate into an objective market regime and scenario analysis (English Native Compliance)."""
 
 from __future__ import annotations
 
@@ -19,23 +19,29 @@ def create_research_manager(llm):
     def research_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
         history = state["investment_debate_state"].get("history", "")
-
         investment_debate_state = state["investment_debate_state"]
 
-        prompt = f"""As the Research Manager and debate facilitator, your role is to critically evaluate this round of debate and deliver a clear, actionable investment plan for the trader.
+        prompt = f"""As the Research Facilitator and Quantitative Debate Synthesizer, your role is to critically evaluate this round of debate and provide an objective synthesis of the market regime, consensus bias, and key observation thresholds in professional English.
 
 {instrument_context}
 
 ---
 
-**Rating Scale** (use exactly one):
-- **Buy**: Strong conviction in the bull thesis; recommend taking or growing the position
-- **Overweight**: Constructive view; recommend gradually increasing exposure
-- **Hold**: Balanced view; recommend maintaining the current position
-- **Underweight**: Cautious view; recommend trimming exposure
-- **Sell**: Strong conviction in the bear thesis; recommend exiting or avoiding the position
+**Observed Market Bias Scale** (Select exactly one based on observed evidence weight):
+- **BULLISH LEANING (Positive Momentum Bias)**: Positive fundamental profitability, cash flow, and long-term technical trend indicators outweigh downside risks.
+- **BALANCED (Neutral & Mixed Signals)**: Long-term structural support and short-term momentum deceleration (or macro/yield pressure) are genuinely balanced.
+- **BEARISH LEANING (Downside Risk Caution)**: Short-term trend breakdown, valuation pressure, macroeconomic tightening, or regulatory/legal risks dominate the data.
 
-Commit to a clear stance whenever the debate's strongest arguments warrant one; reserve Hold for situations where the evidence on both sides is genuinely balanced.
+Commit to an objective analytical stance based strictly on data weight; use BALANCED only when both sides of the debate are truly equal.
+
+---
+
+**COMPLIANCE CONSTRAINTS (STRICT):**
+1. DO NOT provide actionable financial advice, trade orders, or portfolio allocation percentages (e.g., NEVER say "reduce by 30%", "sell now", or "chase buy").
+2. Frame all strategic actions and triggers as "Key Price & Indicator Thresholds to Monitor" rather than personal stop-loss or trade triggers.
+3. NEVER mention options, futures, put spreads, covered calls, or any derivatives.
+4. NEVER cite cherry-picked historical returns or specific alpha numbers (e.g., TSLA +4.0%).
+5. NEVER use broker recommendation terms like 'Overweight' or 'Underweight'. Use strictly 'BULLISH LEANING', 'BALANCED', or 'BEARISH LEANING'.
 
 ---
 

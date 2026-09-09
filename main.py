@@ -26,23 +26,35 @@ class DualLogger:
         self.terminal.flush()
 
     def get_content(self):
-        # 전체 텍스트 합치기
         raw_text = "".join(self.log)
-        # 3개 이상 연속된 개행(\n\n\n...)을 깔끔하게 2개(\n\n)로 압축하고 앞뒤 공백 제거
         cleaned_text = re.sub(r'\n{3,}', '\n\n', raw_text).strip()
         return cleaned_text
 
 
 def extract_final_decision(full_log: str) -> str:
-    match = re.search(r"FINAL TRANSACTION PROPOSAL:\s*\*\*([A-Za-z]+)\*\*", full_log, re.IGNORECASE)
+    """컴플라이언스 신규 정량 바이어스 태그(MULTI-AGENT CONSENSUS)를 최우선 추출하고 레거시 태그도 호환합니다."""
+    # 1. 신규 규격 태그 탐색 (BULLISH LEANING / BALANCED / BEARISH LEANING)
+    match = re.search(r"MULTI-AGENT CONSENSUS:\s*\*\*?([A-Za-z0-9 \(\)\/\-_가-힣]+)\*\*?", full_log, re.IGNORECASE)
     if match:
-        return match.group(1).upper()
+        val = match.group(1).upper().strip()
+        if "BULLISH" in val:
+            return "BULLISH_LEANING"
+        elif "BEARISH" in val:
+            return "BEARISH_LEANING"
+        elif "BALANCED" in val or "NEUTRAL" in val or "HOLD" in val:
+            return "BALANCED"
+        return re.sub(r'[\s/]+', '_', val)
+
+    # 2. 레거시 태그 탐색 호환
+    match = re.search(r"FINAL TRANSACTION PROPOSAL:\s*\*\*?([A-Za-z_]+)\*\*?", full_log, re.IGNORECASE)
+    if match:
+        return match.group(1).upper().strip()
     
-    match = re.search(r"================ 최종 결정 ================\s*\n\s*([A-Za-z]+)", full_log, re.IGNORECASE)
+    match = re.search(r"================ (?:최종 결정|종합 분석 요약|CONSENSUS SUMMARY) ================\s*\n\s*(?:최종 투자의견|종합 관점|MULTI-AGENT CONSENSUS)?\s*[:：]?\s*([A-Za-z_ /\(\)가-힣]+)", full_log, re.IGNORECASE)
     if match:
-        return match.group(1).upper()
+        return match.group(1).upper().strip()
         
-    return "HOLD"
+    return "BALANCED"
 
 
 def save_report_to_desktop(ticker: str, target_date: str, full_log: str, final_decision: str):
@@ -65,28 +77,36 @@ def save_report_to_desktop(ticker: str, target_date: str, full_log: str, final_d
         desktop_path = os.path.join(CURRENT_DIR, "desktop_output")
 
     base_dir = os.path.join(desktop_path, "stock_db")
+
+    # 기존 폴더 구조 호환 유지
+    b_dir = os.path.join(base_dir, "1_Buy_Overweight") if os.path.exists(os.path.join(base_dir, "1_Buy_Overweight")) else os.path.join(base_dir, "1_Buy_Bullish")
+    h_dir = os.path.join(base_dir, "2_Hold") if os.path.exists(os.path.join(base_dir, "2_Hold")) else os.path.join(base_dir, "2_Hold_Neutral")
+    s_dir = os.path.join(base_dir, "3_Sell_Underweight") if os.path.exists(os.path.join(base_dir, "3_Sell_Underweight")) else os.path.join(base_dir, "3_Sell_Bearish")
+
     folder_map = {
-        "BUY_OVERWEIGHT": os.path.join(base_dir, "1_Buy_Overweight"),
-        "HOLD": os.path.join(base_dir, "2_Hold"),
-        "SELL_UNDERWEIGHT": os.path.join(base_dir, "3_Sell_Underweight"),
+        "BULLISH": b_dir,
+        "BALANCED": h_dir,
+        "BEARISH": s_dir,
     }
 
     for path in folder_map.values():
         os.makedirs(path, exist_ok=True)
 
-    if final_decision in ["BUY", "OVERWEIGHT"]:
-        target_folder = folder_map["BUY_OVERWEIGHT"]
-    elif final_decision in ["SELL", "UNDERWEIGHT"]:
-        target_folder = folder_map["SELL_UNDERWEIGHT"]
+    dec_upper = final_decision.upper()
+    if any(k in dec_upper for k in ["BULLISH", "BUY", "OVERWEIGHT"]):
+        target_folder = folder_map["BULLISH"]
+        file_tag = "BULLISH_LEANING"
+    elif any(k in dec_upper for k in ["BEARISH", "SELL", "UNDERWEIGHT", "CAUTION"]):
+        target_folder = folder_map["BEARISH"]
+        file_tag = "BEARISH_LEANING"
     else:
-        target_folder = folder_map["HOLD"]
-        final_decision = "HOLD"
+        target_folder = folder_map["BALANCED"]
+        file_tag = "BALANCED"
 
     timestamp = datetime.now().strftime("%H%M%S")
-    file_name = f"[{target_date}] {ticker}_{final_decision}_{timestamp}.txt"
+    file_name = f"[{target_date}] {ticker}_{file_tag}_{timestamp}.txt"
     file_path = os.path.join(target_folder, file_name)
 
-    # 끝부분 공백 및 빈 줄 확실하게 정리 후 저장
     clean_log_for_file = full_log.rstrip() + "\n"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -99,11 +119,12 @@ def save_report_to_desktop(ticker: str, target_date: str, full_log: str, final_d
 def main():
     today_str = datetime.now().strftime("%Y-%m-%d")
 
-    parser = argparse.ArgumentParser(description="TradingAgents")
+    parser = argparse.ArgumentParser(description="TradingAgents Global Research System")
     parser.add_argument("--ticker", type=str, required=True, help="Stock ticker symbol")
     parser.add_argument("--date", type=str, default=today_str, help="Analysis date (YYYY-MM-DD), defaults to today")
     parser.add_argument("--models", type=str, default="gpt-4o-mini", help="LLM model to use")
     parser.add_argument("--rounds", type=int, default=1, help="Number of rounds (Default: 1)")
+    parser.add_argument("--lang", type=str, default="en", choices=["ko", "en"], help="Report language: 'ko' (Korean) or 'en' (English)")
     
     args = parser.parse_args()
 
@@ -112,33 +133,43 @@ def main():
     sys.stdout = logger
 
     success = False
-    final_decision = "HOLD"
+    final_decision = "BALANCED"
 
     try:
-        print(f"🚀 분석을 시작합니다... [종목: {args.ticker} | 기준 날짜: {args.date}]")
+        print(f"🚀 분석을 시작합니다... [종목: {args.ticker} | 기준 날짜: {args.date} | 언어: {args.lang.upper()}]")
 
         config = DEFAULT_CONFIG.copy()
         
-        # 1. 라운드 수 축소 (토론 및 리스크 회의를 1회로 제한하여 실행 속도 2배 향상)
+        # 1. 실행 속도 유지
         config["max_debate_rounds"] = args.rounds
         config["max_risk_discuss_rounds"] = args.rounds
         
-        # 2. 과거 메모리 의존성 차단
+        # 2. 메모리 로그 의존성 물리적 차단
         config["memory_log_max_entries"] = 0
         if "enable_memory" in config:
             config["enable_memory"] = False
         
-        hybrid_language_instruction = (
-            "\n\n[SYSTEM DIRECTION:\n"
-            "1. REASONING & DEBATE IN ENGLISH: All internal agent discussions, technical analyses, fundamentals evaluations, domain reports, and intermediate reasoning steps MUST be conducted strictly in English to maximize financial reasoning depth and analytical performance.\n"
-            "2. FINAL REPORT IN KOREAN: The 'Final Trading Strategy Report' (including Risk Evaluation, Executive Summary, Investment Thesis, and Final Decision) MUST be written entirely in professional, fluent, and clear Korean.\n"
-            "3. NO MEMORY: Do NOT rely on, cite, or retrieve any past memory or historical trade reflections (past_context). Evaluate the ticker strictly and independently based only on the current market data and financial indicators provided for this specific analysis date.]"
+        # 3. 글로벌 컴플라이언스(SEC 표준) 엄격 시스템 지침 주입
+        target_lang = "fluent, professional Korean" if args.lang == "ko" else "professional Wall Street English"
+        
+        compliance_instruction = (
+            f"\n\n[GLOBAL REGULATORY COMPLIANCE DIRECTIVES (SEC RULE 206(4)-1 & INVESTMENT ADVISERS ACT):\n"
+            f"1. REASONING IN ENGLISH: Conduct all internal analyst debates and intermediate data evaluations strictly in English.\n"
+            f"2. FINAL REPORT LANGUAGE: The final consensus report MUST be written entirely in {target_lang}.\n"
+            f"3. ABSOLUTELY NO ACTIONABLE ADVICE: Never instruct the user what to do with their capital. "
+            f"Never specify portfolio allocation percentages. Frame all price levels strictly as objective 'Key Observation Thresholds' for trend monitoring.\n"
+            f"4. NO DERIVATIVES: Never mention options, put spreads, call spreads, or covered calls.\n"
+            f"5. NO PAST PERFORMANCE CITATIONS: Never cite previous winning trades, historical returns, or specific alpha numbers.\n"
+            f"6. MARKET BIAS TERMINOLOGY: Never use broker ratings like 'Overweight' or 'Underweight'. Use strictly 'BULLISH LEANING', 'BALANCED', or 'BEARISH LEANING'.\n"
+            f"7. MANDATORY HEADER: Format the final synthesis strictly under '### Integrated Market Perspectives' "
+            f"with section '### Key Observation Points' and end with 'MULTI-AGENT CONSENSUS: [BULLISH LEANING | BALANCED | BEARISH LEANING]'.\n"
+            f"8. INDEPENDENT SNAPSHOT: Evaluate the instrument strictly and independently based only on the current market data provided.]"
         )
         
         if "system_prompt_suffix" in config:
-            config["system_prompt_suffix"] += hybrid_language_instruction
+            config["system_prompt_suffix"] += compliance_instruction
         else:
-            config["system_prompt_suffix"] = hybrid_language_instruction
+            config["system_prompt_suffix"] = compliance_instruction
 
         ta = TradingAgentsGraph(debug=True, config=config)
         ta.propagate(args.ticker, args.date)
@@ -146,9 +177,9 @@ def main():
         full_text = logger.get_content()
         final_decision = extract_final_decision(full_text)
         
-        print("\n================ 최종 결정 ================")
-        print(f"최종 투자의견: {final_decision}")
-        print("===========================================")
+        print("\n================ 종합 분석 요약 ================")
+        print(f"MULTI-AGENT CONSENSUS: {final_decision}")
+        print("================================================")
         
         success = True
 

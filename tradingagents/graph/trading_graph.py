@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import contextlib
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -60,6 +61,58 @@ def _coerce_max_retries(value):
     if n < 0:
         raise ValueError(f"llm_max_retries must be >= 0, got {n}")
     return n
+
+
+def _sanitize_compliance_text(text: str) -> str:
+    """
+    글로벌(영문/국문) 규정 준수 가드레일 (SEC Rule 206(4)-1 & Investment Advisers Act):
+    1. 과거 성과/알파 인용 차단 (Past Performance Cherry-picking)
+    2. 계좌 자산 비율(%), 분수(1/3, 1/2) 및 변칙 매매 지시 차단 (선진입, 청산 등)
+    3. 파생상품(옵션) 언급 차단 (No Derivatives)
+    4. 명령문 및 트리거를 객관적 모니터링 기준선으로 치환
+    5. 레거시 헤더 강제 치환
+    """
+    if not text or not isinstance(text, str):
+        return text
+
+    # 1. 과거 특정 추천 성과 및 수익률/알파 인용 전면 차단
+    text = re.sub(r'(?:past|historical|prior|과거|직전|이전).*?(?:return|gain|alpha|수익|알파|overweight|buy|sell|call).*?[\+\-]?\d+(?:\.\d+)?%?', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'[\+\-]?\d+(?:\.\d+)?%\s*(?:alpha|gain|return|profit|알파|초과\s*수익)', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'alpha\s*vs\s*SPY.*?([,\n\)]|\Z)', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\+?nan%', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\([A-Z]{1,5}\s*(?:case|example|사례).*?\)', '', text, flags=re.IGNORECASE)
+
+    # 2. 계좌 포지션 비율(%), 분수(1/3, 1/2) 및 매매 행동 지시어 차단
+    action_keywords = r'(?:선진입|진입|청산|정리|담아|감산|매도|축소|손절|현금화|감축|이익실현|추가|테스트|익절|비중|할당|매수)'
+    ratio_pattern = r'(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%|\d+/\d+\s*~\s*\d+/\d+|\d+/\d+)'
+    
+    text = re.sub(rf'{ratio_pattern}\s*(?:부근\s*)?{action_keywords}', '단계적 리스크 노출 조절', text)
+    text = re.sub(rf'{action_keywords}\s*(?:시\s*)?{ratio_pattern}', '단계적 리스크 노출 조절', text)
+    text = re.sub(rf'목표\s*포지션의\s*{ratio_pattern}', '일부 분할 관측', text)
+    text = re.sub(rf'보유분\s*{ratio_pattern}\s*이익실현', '모멘텀 과열 여부 확인', text)
+    text = re.sub(r'(?:잔여\s*)?(?:대부분\s*정리|\d+~\d+%\s*청산)', '추세 이탈 경계 관측', text)
+
+    # 영문 비율 지시어 차단
+    text = re.sub(r'\b(?:trim|reduce|cut|sell|take profit on|allocate|add)\s*(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%)\b', 'monitor exposure thresholds', text, flags=re.IGNORECASE)
+    text = re.sub(r'\b(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%)\s*(?:allocation|reduction|cut|trim|profit-taking)\b', 'exposure observation', text, flags=re.IGNORECASE)
+
+    # 3. 파생상품(옵션/헤지) 언급 차단
+    derivatives_pattern = r'\b(put spread|call spread|covered call|protective put|straddle|options? hedge|puts? and calls?|풋스프레드|커버드콜|풋옵션|콜옵션|스프레드|옵션\s*헤지)\b'
+    text = re.sub(derivatives_pattern, 'risk management scenario', text, flags=re.IGNORECASE)
+
+    # 4. 행동 트리거(Trigger) -> 관측 기준선(Observation Threshold) 전환
+    text = re.sub(r'\b(?:buy|sell|stop-loss|trim)\s*triggers?\b', 'key observation thresholds', text, flags=re.IGNORECASE)
+    text = re.sub(r'\b(?:감축|증액|매수|손절|익절|축소)\s*트리거\b', '주요 관측 기준선(Observation Threshold)', text)
+    text = re.sub(r'즉시\s*(?:풀사이즈\s*)?금지', '단계적 시장 확인 구간', text)
+    text = re.sub(r'추격\s*매수\s*금지', '추격 진입 주의 구간 관측', text)
+
+    # 5. 레거시 헤더 강제 치환
+    text = re.sub(r'###\s*Final Execution & Conclusion', '### Integrated Market Perspectives', text, flags=re.IGNORECASE)
+    text = re.sub(r'\*\*Executive Summary\*\*\s*[:：]', '**Key Observation Points:**', text, flags=re.IGNORECASE)
+    text = re.sub(r'FINAL TRANSACTION PROPOSAL\s*[:：]', 'MULTI-AGENT CONSENSUS:', text, flags=re.IGNORECASE)
+    text = re.sub(r'최종\s*(?:투자의견|결정)\s*[:：]', '종합 분석 관점:', text, flags=re.IGNORECASE)
+
+    return text
 
 
 class TradingAgentsGraph:
@@ -283,7 +336,12 @@ class TradingAgentsGraph:
         """Execute the graph and write the resulting state to disk and memory log."""
         pure_company = company_name.split('\n')[0].strip()
 
-        past_context = self.memory_log.get_past_context(pure_company)
+        # ==============================================================================
+        # [컴플라이언스 핵심] 과거 추천 수익률/알파 인용 원천 차단 (SEC Rule 206(4)-1)
+        # memory_log에서 과거 수익률 주입을 배제하여 LLM의 체리피킹 인용을 원천 차단합니다.
+        # ==============================================================================
+        past_context = ""
+
         instrument_context = self.resolve_instrument_context(pure_company, asset_type)
 
         init_agent_state = self.propagator.create_initial_state(
@@ -305,27 +363,45 @@ class TradingAgentsGraph:
 
         self.curr_state = final_state
 
-        # ================= [비용 0원: 순수 파이썬 문자열 필터링만 적용] =================
+        # ================= [컴플라이언스 후처리 및 안전망] =================
         try:
             report_keys = ["market_report", "sentiment_report", "news_report", "fundamentals_report", "final_trade_decision"]
             for r_key in report_keys:
                 content = final_state.get(r_key, "")
                 if content and isinstance(content, str):
+                    content = _sanitize_compliance_text(content)
+
+                    # 구버전 환각 데이터 필터링
                     if "2023" in content:
                         lines = content.split('\n')
                         clean_lines = [l for l in lines if not any(x in l for x in ["2023", "AAPL", "MSFT", "GOOG"])]
                         content = '\n'.join(clean_lines)
+
+                    # 최종 결론 최하단 법적 면책 조항 강제 추가 (글로벌 표준 영문/국문 병기)
+                    if r_key == "final_trade_decision" and "Disclaimer" not in content:
+                        disclaimer_text = (
+                            "\n\n==================================================\n"
+                            "[Disclaimer / 법적 고지]\n"
+                            "This report is an automated quantitative research summary synthesized by AI multi-agents "
+                            "based on publicly available market data. It does NOT constitute financial advice, investment recommendations, "
+                            "or an endorsement to buy or sell securities. All investment decisions and associated risks rest solely with the user.\n\n"
+                            "본 보고서는 AI 멀티 에이전트 시스템이 공시 데이터 및 기술 지표를 바탕으로 자동 생성한 정량적 관측 요약본이며, "
+                            "금융투자상품의 매수/매도를 권유하거나 투자 자문을 제공하지 않습니다. 모든 투자 판단과 책임은 투자자 본인에게 있습니다.\n"
+                            "=================================================="
+                        )
+                        content = content.strip() + disclaimer_text
+
                     final_state[r_key] = content
         except Exception as filter_error:
-            logger.warning("전체 보고서 필터링 과정에서 예외 발생: %s", filter_error)
+            logger.warning("보고서 필터링 과정에서 예외 발생: %s", filter_error)
 
-        # ================= [리포트 터미널 출력] =================
+        # ================= [리포트 터미널 출력 헤더 동기화] =================
         report_titles = {
             "market_report": "Technical Analysis Report",
             "sentiment_report": "Social Sentiment Report",
             "news_report": "Macro & News Report",
             "fundamentals_report": "Fundamentals Report",
-            "final_trade_decision": "Final Trading Strategy Report"
+            "final_trade_decision": "Multi-Agent Consensus & Risk Synthesis"
         }
         for r_key, title_name in report_titles.items():
             clean_content = final_state.get(r_key, "")
