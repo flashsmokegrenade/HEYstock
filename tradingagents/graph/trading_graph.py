@@ -51,7 +51,6 @@ logger = logging.getLogger(__name__)
 
 
 def _coerce_max_retries(value):
-    """Validate an ``llm_max_retries`` value to a non-negative int."""
     if isinstance(value, bool):
         raise ValueError(f"llm_max_retries must be an integer, not a boolean: {value!r}")
     try:
@@ -64,25 +63,15 @@ def _coerce_max_retries(value):
 
 
 def _sanitize_compliance_text(text: str) -> str:
-    """
-    글로벌(영문/국문) 규정 준수 가드레일 (SEC Rule 206(4)-1 & Investment Advisers Act):
-    1. 과거 성과/알파 인용 차단 (Past Performance Cherry-picking)
-    2. 계좌 자산 비율(%), 분수(1/3, 1/2) 및 변칙 매매 지시 차단 (선진입, 청산 등)
-    3. 파생상품(옵션) 언급 차단 (No Derivatives)
-    4. 명령문 및 트리거를 객관적 모니터링 기준선으로 치환
-    5. 레거시 헤더 강제 치환
-    """
     if not text or not isinstance(text, str):
         return text
 
-    # 1. 과거 특정 추천 성과 및 수익률/알파 인용 전면 차단
     text = re.sub(r'(?:past|historical|prior|과거|직전|이전).*?(?:return|gain|alpha|수익|알파|overweight|buy|sell|call).*?[\+\-]?\d+(?:\.\d+)?%?', '', text, flags=re.IGNORECASE)
     text = re.sub(r'[\+\-]?\d+(?:\.\d+)?%\s*(?:alpha|gain|return|profit|알파|초과\s*수익)', '', text, flags=re.IGNORECASE)
     text = re.sub(r'alpha\s*vs\s*SPY.*?([,\n\)]|\Z)', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\+?nan%', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\([A-Z]{1,5}\s*(?:case|example|사례).*?\)', '', text, flags=re.IGNORECASE)
 
-    # 2. 계좌 포지션 비율(%), 분수(1/3, 1/2) 및 매매 행동 지시어 차단
     action_keywords = r'(?:선진입|진입|청산|정리|담아|감산|매도|축소|손절|현금화|감축|이익실현|추가|테스트|익절|비중|할당|매수)'
     ratio_pattern = r'(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%|\d+/\d+\s*~\s*\d+/\d+|\d+/\d+)'
     
@@ -92,21 +81,17 @@ def _sanitize_compliance_text(text: str) -> str:
     text = re.sub(rf'보유분\s*{ratio_pattern}\s*이익실현', '모멘텀 과열 여부 확인', text)
     text = re.sub(r'(?:잔여\s*)?(?:대부분\s*정리|\d+~\d+%\s*청산)', '추세 이탈 경계 관측', text)
 
-    # 영문 비율 지시어 차단
     text = re.sub(r'\b(?:trim|reduce|cut|sell|take profit on|allocate|add)\s*(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%)\b', 'monitor exposure thresholds', text, flags=re.IGNORECASE)
     text = re.sub(r'\b(?:\d+~\d+%|\d+%\s*to\s*\d+%|\d+%)\s*(?:allocation|reduction|cut|trim|profit-taking)\b', 'exposure observation', text, flags=re.IGNORECASE)
 
-    # 3. 파생상품(옵션/헤지) 언급 차단
     derivatives_pattern = r'\b(put spread|call spread|covered call|protective put|straddle|options? hedge|puts? and calls?|풋스프레드|커버드콜|풋옵션|콜옵션|스프레드|옵션\s*헤지)\b'
     text = re.sub(derivatives_pattern, 'risk management scenario', text, flags=re.IGNORECASE)
 
-    # 4. 행동 트리거(Trigger) -> 관측 기준선(Observation Threshold) 전환
     text = re.sub(r'\b(?:buy|sell|stop-loss|trim)\s*triggers?\b', 'key observation thresholds', text, flags=re.IGNORECASE)
     text = re.sub(r'\b(?:감축|증액|매수|손절|익절|축소)\s*트리거\b', '주요 관측 기준선(Observation Threshold)', text)
     text = re.sub(r'즉시\s*(?:풀사이즈\s*)?금지', '단계적 시장 확인 구간', text)
     text = re.sub(r'추격\s*매수\s*금지', '추격 진입 주의 구간 관측', text)
 
-    # 5. 레거시 헤더 강제 치환
     text = re.sub(r'###\s*Final Execution & Conclusion', '### Integrated Market Perspectives', text, flags=re.IGNORECASE)
     text = re.sub(r'\*\*Executive Summary\*\*\s*[:：]', '**Key Observation Points:**', text, flags=re.IGNORECASE)
     text = re.sub(r'FINAL TRANSACTION PROPOSAL\s*[:：]', 'MULTI-AGENT CONSENSUS:', text, flags=re.IGNORECASE)
@@ -333,15 +318,8 @@ class TradingAgentsGraph:
         return write_report_tree(final_state, ticker, save_path)
 
     def _run_graph(self, company_name, trade_date, asset_type: str = "stock"):
-        """Execute the graph and write the resulting state to disk and memory log."""
         pure_company = company_name.split('\n')[0].strip()
-
-        # ==============================================================================
-        # [컴플라이언스 핵심] 과거 추천 수익률/알파 인용 원천 차단 (SEC Rule 206(4)-1)
-        # memory_log에서 과거 수익률 주입을 배제하여 LLM의 체리피킹 인용을 원천 차단합니다.
-        # ==============================================================================
         past_context = ""
-
         instrument_context = self.resolve_instrument_context(pure_company, asset_type)
 
         init_agent_state = self.propagator.create_initial_state(
@@ -357,13 +335,11 @@ class TradingAgentsGraph:
             tid = thread_id(pure_company, str(trade_date), self._run_signature(asset_type))
             args.setdefault("config", {}).setdefault("configurable", {})["thread_id"] = tid
 
-        # 안정적인 그래프 일괄 실행
         print("\n🔄 에이전트들이 데이터 수집, 토론 및 리스크 검증을 진행 중입니다... (약 1~2분 소요)")
         final_state = self.graph.invoke(init_agent_state, **args)
 
         self.curr_state = final_state
 
-        # ================= [컴플라이언스 후처리 및 안전망] =================
         try:
             report_keys = ["market_report", "sentiment_report", "news_report", "fundamentals_report", "final_trade_decision"]
             for r_key in report_keys:
@@ -371,13 +347,11 @@ class TradingAgentsGraph:
                 if content and isinstance(content, str):
                     content = _sanitize_compliance_text(content)
 
-                    # 구버전 환각 데이터 필터링
                     if "2023" in content:
                         lines = content.split('\n')
                         clean_lines = [l for l in lines if not any(x in l for x in ["2023", "AAPL", "MSFT", "GOOG"])]
                         content = '\n'.join(clean_lines)
 
-                    # 최종 결론 최하단 법적 면책 조항 강제 추가 (글로벌 표준 영문/국문 병기)
                     if r_key == "final_trade_decision" and "Disclaimer" not in content:
                         disclaimer_text = (
                             "\n\n==================================================\n"
@@ -395,7 +369,6 @@ class TradingAgentsGraph:
         except Exception as filter_error:
             logger.warning("보고서 필터링 과정에서 예외 발생: %s", filter_error)
 
-        # ================= [리포트 터미널 출력 헤더 동기화] =================
         report_titles = {
             "market_report": "Technical Analysis Report",
             "sentiment_report": "Social Sentiment Report",
@@ -409,7 +382,6 @@ class TradingAgentsGraph:
                 sys.stdout.write(f"\n{'='*50}\n[{title_name}]\n{'='*50}\n{clean_content.strip()}\n")
                 sys.stdout.flush()
 
-        # ================= [디스크에 데이터 기록] =================
         self._log_state(trade_date, final_state)
 
         if final_state.get("final_trade_decision"):

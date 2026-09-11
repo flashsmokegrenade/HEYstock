@@ -91,7 +91,7 @@ class GraphSetup:
         workflow.add_node("Conservative Analyst", conservative_analyst)
         workflow.add_node("Portfolio Manager", portfolio_manager_node)
 
-        # 안정적인 순차 체인 연결
+        # 안정적인 순차 직렬 체인 연결 (원본)
         workflow.add_edge(START, plan.specs[0].agent_node)
 
         for i, spec in enumerate(plan.specs):
