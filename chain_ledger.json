@@ -1,0 +1,34 @@
+{
+  "STX": {
+    "ticker": "STX",
+    "doc_hash": "5049b7d7556ba2e6e20b7b351c6d00478ae0b11e6ea4f2654d6252f58aebfcd2",
+    "tx_hash": "0x24d65031781b791e8fd5581bd7004c902b92d7623d647cd2380e7e3748004f63",
+    "block_number": 21840001,
+    "timestamp": "2026-09-17 01:20:47 UTC",
+    "status": "COMMITTED"
+  },
+  "V": {
+    "ticker": "V",
+    "doc_hash": "fc80c1b7e752ac54090bcce2a608091676d33d17fbec5f4ad7d80719179903dd",
+    "tx_hash": "0x1f26d76b3db3ca6c87c1cc08c2e541a221ac2c0e1d31f1ddca452a038f8947a6",
+    "block_number": 21840002,
+    "timestamp": "2026-09-17 01:24:27 UTC",
+    "status": "COMMITTED"
+  },
+  "AXON": {
+    "ticker": "AXON",
+    "doc_hash": "3b44b385947edcc6d2ba35d5781151b1ec0c0f60860ce2f823dcd0585bc941b7",
+    "tx_hash": "0x78610f43210704e6d9f78d8d4ee2f12fd00f0151841fb0c88fef77ce36e893b3",
+    "block_number": 21840005,
+    "timestamp": "2026-09-19 03:45:39 UTC",
+    "status": "COMMITTED"
+  },
+  "MSFT": {
+    "ticker": "MSFT",
+    "doc_hash": "f38c32c8bcd4c3e50e59b939bb5e1ddc17dc5c7a0156b684fc323c9c2a7a943f",
+    "tx_hash": "0x5099dfff45d3c49afd6f43c0f8451658d08d70cdfe1afa21dea5145eafa2626d",
+    "block_number": 21840004,
+    "timestamp": "2026-09-19 01:54:54 UTC",
+    "status": "COMMITTED"
+  }
+}

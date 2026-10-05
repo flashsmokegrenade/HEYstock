@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import re
 
 from langchain_core.messages import AIMessage
 
@@ -17,6 +18,45 @@ from tradingagents.agents.utils.structured import (
 )
 
 
+def _sanitize_trader_output(plan_text: str) -> str:
+    """법적 리스크 방지: 직접 매매 명령(Buy/Sell/Hold)을 객관적 정량 편향(Quantitative Bias)으로 자동 정제."""
+    if not plan_text:
+        return plan_text
+
+    # 1. 헤더 정제
+    cleaned = plan_text.replace(
+        "### Trader's Initial Strategy & Summary",
+        "### Market Execution & Technical Summary",
+    )
+    cleaned = cleaned.replace(
+        "Trader's Initial Strategy & Summary",
+        "Market Execution & Technical Summary",
+    )
+
+    # 2. 직접 매매 액션(Initial Action) -> 정량적 기술 편향(Quantitative Bias)으로 치환
+    cleaned = re.sub(
+        r"\*\*Initial Action\*\*:\s*Buy\b",
+        "**Quantitative Bias**: 상방 모멘텀 (Bullish Momentum)",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"\*\*Initial Action\*\*:\s*Sell\b",
+        "**Quantitative Bias**: 하방 리스크 (Downside Caution)",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"\*\*Initial Action\*\*:\s*Hold\b",
+        "**Quantitative Bias**: 신호 균형 및 관망 (Neutral Balance)",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"\*\*Initial Action\*\*:", "**Quantitative Bias**:", cleaned)
+
+    return cleaned
+
+
 def create_trader(llm):
     structured_llm = bind_structured(llm, TraderProposal, "Trader")
 
@@ -29,18 +69,19 @@ def create_trader(llm):
             {
                 "role": "system",
                 "content": (
-                    "You are a Market Execution & Technical Regime Analyst. "
-                    "Your role is to objectively assess market momentum, liquidity conditions, and risk-reward scenarios "
+                    "You are a Market Execution & Quantitative Regime Analyst. "
+                    "Your role is to objectively assess market momentum, volatility regime, and statistical risk-reward balance "
                     "based on the analysts' reports and the research plan.\n\n"
-                    "STRICT COMPLIANCE RULES:\n"
-                    "1. DO NOT provide direct actionable trade advice or personal orders to the user. "
-                    "NEVER specify explicit portfolio allocation percentages (e.g., do NOT say 'reduce by 30-50%' or 'exit position immediately').\n"
-                    "2. NEVER recommend options, futures, put spreads, covered calls, or any derivatives.\n"
-                    "3. NEVER cite cherry-picked historical returns or specific alpha figures (e.g., TSLA +4.0%).\n"
-                    "4. Frame all price levels as 'Key Technical Scenarios & Support/Resistance Levels to Observe' "
-                    "rather than personal stop-loss or trade triggers.\n"
-                    "5. Synthesize your final action/stance purely as an analytical assessment of current market momentum "
-                    "and risk-reward skew, not as an investment mandate."
+                    "STRICT COMPLIANCE RULES (자본시장법 준수 및 정량 리서치 원칙):\n"
+                    "1. DO NOT provide direct trade advice, execution orders, or personal mandates. "
+                    "NEVER tell the user to 'Buy', 'Sell', or 'Hold'. Never use imperative trading commands.\n"
+                    "2. NEVER specify explicit portfolio allocation percentages (e.g., do NOT say 'reduce by 30-50%' or 'exit position').\n"
+                    "3. NEVER recommend options, futures, put spreads, covered calls, or any derivatives.\n"
+                    "4. NEVER cite cherry-picked historical returns or specific alpha figures (e.g., TSLA +4.0%).\n"
+                    "5. Frame all price levels strictly as 'Key Technical Observation Levels (지지/저항 분기점)' "
+                    "rather than personal stop-loss, profit-taking, or entry triggers.\n"
+                    "6. Formulate your execution bias purely as an objective 'Quantitative Bias (정량적 편향)' "
+                    "(e.g., 상방 모멘텀, 하방 리스크, 신호 균형 및 관망) reflecting indicator alignment, NOT as an investment decision."
                     + get_language_instruction()
                 ),
             },
@@ -58,13 +99,16 @@ def create_trader(llm):
             },
         ]
 
-        trader_plan = invoke_structured_or_freetext(
+        raw_trader_plan = invoke_structured_or_freetext(
             structured_llm,
             llm,
             messages,
             render_trader_proposal,
             "Trader",
         )
+
+        # 법적 준수를 위한 출력 문자열 사후 정제
+        trader_plan = _sanitize_trader_output(raw_trader_plan)
 
         return {
             "messages": [AIMessage(content=trader_plan)],

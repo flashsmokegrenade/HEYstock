@@ -26,10 +26,14 @@ class MarketBiasRating(str, Enum):
 # Backward compatibility alias
 PortfolioRating = MarketBiasRating
 
-class TraderAction(str, Enum):
-    BUY = "Buy"
-    HOLD = "Hold"
-    SELL = "Sell"
+# [자본시장법 준수 개편] 매매 명령(Buy/Sell/Hold)을 정량적 편향(Quant Bias)으로 전환
+class ExecutionBias(str, Enum):
+    MOMENTUM_OUTPERFORMANCE = "상방 모멘텀 우위 (Positive Momentum Bias)"
+    NEUTRAL_BALANCE = "신호 균형 및 관망 (Neutral & Mixed Signals)"
+    DEFENSIVE_CAUTION = "하방 리스크 경계 (Downside Risk Caution)"
+
+# 하위 호환성 유지용 Alias
+TraderAction = ExecutionBias
 
 # ---------------------------------------------------------------------------
 # 1~4. 4 Domain Analysts Common Schema
@@ -108,19 +112,19 @@ def render_domain_report(domain_name: str, report: DomainReport) -> str:
     ])
 
 # ---------------------------------------------------------------------------
-# 5. Trader's Initial Strategy (Trader)
+# 5. Market Execution & Technical Summary (Trader)
 # ---------------------------------------------------------------------------
 
 class TraderProposal(BaseModel):
-    """Structured transaction proposal produced by the Trader."""
+    """Structured analytical proposal produced by the Execution Analyst."""
 
-    action: TraderAction = Field(
-        description="The technical positioning bias. Exactly one of Buy / Hold / Sell.",
+    action: ExecutionBias = Field(
+        description="The technical positioning bias. Evaluated as MOMENTUM_OUTPERFORMANCE, NEUTRAL_BALANCE, or DEFENSIVE_CAUTION.",
     )
     reasoning: str = Field(
         description=(
             "The synthesis of the 4 Domain Bull/Bear scores and technical momentum scenarios. "
-            "Frame as objective market observations. DO NOT provide actionable financial advice or personal trade commands."
+            "Frame strictly as objective market observations. DO NOT provide actionable financial advice or personal trade commands."
         ),
     )
     entry_price: float | None = Field(
@@ -132,23 +136,39 @@ class TraderProposal(BaseModel):
         description="Optional technical support/invalidation level in the instrument's quote currency.",
     )
 
+    @field_validator("action", mode="before")
+    @classmethod
+    def normalize_action(cls, v):
+        """LLM이 기존 Buy/Sell/Hold를 반환하더라도 정량 리서치 편향 용어로 강제 변환."""
+        if isinstance(v, str):
+            v_upper = v.upper()
+            if any(k in v_upper for k in ["BUY", "BULL", "MOMENTUM"]):
+                return ExecutionBias.MOMENTUM_OUTPERFORMANCE
+            elif any(k in v_upper for k in ["SELL", "BEAR", "DEFENSIVE", "CAUTION"]):
+                return ExecutionBias.DEFENSIVE_CAUTION
+            elif any(k in v_upper for k in ["HOLD", "NEU", "BALAN", "MIXED"]):
+                return ExecutionBias.NEUTRAL_BALANCE
+        return v
+
     @field_validator("entry_price", "stop_loss", mode="before")
     @classmethod
     def _nullish_float_to_none(cls, v):
         return _coerce_optional_float(v)
 
 def render_trader_proposal(proposal: TraderProposal) -> str:
-    """Render TraderProposal as the 5th section: Trader's Initial Strategy & Summary."""
+    """Render TraderProposal as objective quantitative summary."""
+    bias_val = proposal.action.value if hasattr(proposal.action, 'value') else str(proposal.action)
+    
     parts = [
-        "### Trader's Initial Strategy & Summary",
-        f"**Initial Action**: {proposal.action.value}",
+        "### Market Execution & Technical Summary",
+        f"**Quantitative Bias**: {bias_val}",
         "",
         f"**Score Synthesis & Rationale**: {proposal.reasoning}",
     ]
     if proposal.entry_price is not None:
-        parts.extend(["", f"**Reference Level**: {proposal.entry_price}"])
+        parts.extend(["", f"**Key Technical Pivot Level**: {proposal.entry_price}"])
     if proposal.stop_loss is not None:
-        parts.extend(["", f"**Invalidation Level**: {proposal.stop_loss}"])
+        parts.extend(["", f"**Technical Invalidation Level**: {proposal.stop_loss}"])
     
     parts.append("---")
     return "\n".join(parts)

@@ -1,0 +1,113 @@
+### company_of_interest
+080220.KQ
+
+### asset_type
+stock
+
+### instrument_context
+The instrument to analyze is `080220.KQ`. Use this exact ticker in every tool call, report, and recommendation, preserving any exchange suffix (e.g. `.TO`, `.L`, `.HK`, `.T`, `-USD`). Resolved identity: Company: Jeju Semiconductor Corp.; Exchange: KOE. Do not substitute a different company or ticker unless a tool result explicitly disproves this resolved identity.
+
+### trade_date
+2026-10-04
+
+### sender
+Trader
+
+### market_report
+### Technical Analysis Analysis
+> ⚡ **Quick Pulse**: #단기추세강화 #밴드상단근접경계 #중기상방우위
+**Analyst Findings**: 080220.KQ는 2026-10-02 종가 92,400으로 단기(10일 EMA 80,498.84) 및 중기(50일 SMA 74,958) 기준선 위에 위치해 상승 추세가 강화된 모습이다. 장기(200일 SMA 61,267.65) 대비도 크게 상회하여 중장기 추세 훼손 신호는 제한적이다. 모멘텀은 RSI 68.42로 70에 근접한 강세 영역이며, MACD 2,224.55와 시그널 219.50, 히스토그램 +2,005.05로 양(+)의 모멘텀이 확대된 상태다. 볼린저밴드는 상단(UB 87,210.88)을 상회해 밴드 상단 돌파/추세 가속 구간으로 해석되며, ATR 5,386.60은 단기 변동성이 존재함을 시사한다. 다만 RSI와 상단밴드 근접으로 단기 과열에 따른 조정 위험도 함께 고려할 필요가 있다.
+
+**Debate Summary**: 강세 측은 가격이 10일 EMA/50일 SMA/200일 SMA를 모두 상회하고, MACD 히스토그램이 큰 폭으로 양(+)을 유지하며 모멘텀이 재가속된 점을 근거로 ‘상승 추세의 유효’ 쪽에 무게를 둔다. 반대로 약세 측은 RSI 68.42가 과열 임계(70) 근처이고, 종가가 볼린저 상단을 상회해 단기적으로 밴드 상단 추종 이후 되돌림이 나올 수 있다고 경계한다. 결론적으로 추세는 위지만 단기 조정/변동성 확대 가능성을 동반한 ‘상방 우위+단기 리스크’ 관점의 의견 대립이 있다.
+
+**Domain Score**: [Bull Score: 📈 65 / Bear Score: 📉 35]
+---
+
+### sentiment_report
+### Sentiment Analysis
+> ⚡ **Quick Pulse**: #데이터공백주의 #단기심리불확실 #리테일신호부재
+**Analyst Findings**: 080220.KQ(제주반도체) 관련 Yahoo Finance 뉴스는 2026-09-27~2026-10-04 기간 동안 ‘검색 결과 없음’으로 집계되어, 사건 기반(팩트) 모멘텀을 확인하기 어렵다. StockTwits 데이터는 본 프롬프트에 ‘국내 뉴스 수집 데이터 없음’만 제시되어, 소매 투자자 감정(불/곰 비율) 및 메시지 수 기반의 리드 신호를 평가할 수 없다. 즉, 교차소스 비교(뉴스 vs 리테일) 자체가 불가능할 정도로 관측 데이터가 제한되어 단기 방향성 결론의 신뢰도가 낮다. 현재로서는 “확실한 촉매 부재 + 감정 데이터 미수집”에 가깝기 때문에 관망/보수적 접근이 합리적이다.
+
+**Debate Summary**: 강세 측은 뉴스가 없다는 점이 반드시 악재는 아니며, 감정 데이터가 없을 때는 추세가 급격히 훼손되지 않았을 가능성에 무게를 둔다. 반면 약세 측은 양쪽(뉴스·소셜) 모두 관측 공백이라서 실질적인 모멘텀이 확인되지 않으며, 데이터가 없는 구간에서는 변동성 확대 시 리스크 관리가 우선이라고 본다. 결론적으로 공통 인식은 ‘현재는 판단 근거 부족’이며, 방향성보다 불확실성 자체가 핵심 변수라는 데 합의한다.
+
+**Domain Score**: [Bull Score: 📈 35 / Bear Score: 📉 65]
+---
+
+### news_report
+### News Analysis
+> ⚡ **Quick Pulse**: #금리상단위험 #장기금리재상승 #뉴스공백주의
+**Analyst Findings**: 080220.KQ(제주반도체) 관련 최근 1주 기업 특이 뉴스는 확인되지 않았다(개별 뉴스 미존재). 거시적으로는 미국 기준금리(Fed funds)는 2025-10~2026-09 구간에서 4.09%→3.75%로 완만히 하향됐지만, 10년물 금리는 2025-10~2026-10에서 상승 흐름이 확인됐다(10Y 4.18%→5.24%, 최근 5.24%). 이는 장단기 스프레드가 축소되는 가운데(10Y-2Y 최근 0.45%로 과거 0.58 대비 하락) 성장/투자 심리에 부담이 될 수 있다. 인플레이션(CPI)은 2025-11 325.1에서 2026-08 334.1로 완만 상승했고, 실업률은 4.5%→4.2%로 개선(경기 둔화 우려는 일부 완화)됐다. 다만 전반적으로 ‘금리 하락 기대는 있으나 장기금리 재상승’ 국면이라 반도체/기술주 밸류에이션 변동성이 커질 수 있다.
+
+**Debate Summary**: 강세 요인: 실업률 하락과 기준금리의 하향 추세는 경기의 급격한 악화를 지연시키고, 자본비용 부담을 완화할 여지가 있다. 또한 최근 글로벌 증시가 금리 인상 기대 완화로 반등했다는 보도가 있어 단기 위험선호가 살아있을 수 있다. 약세 요인: 핵심은 장기금리(10Y)가 최근 구간에서 재상승하며 080220.KQ 같은 성장/밸류 민감 종목에 할인율 압력이 다시 커질 수 있다는 점이다. CPI의 완만한 재상승은 추가 긴축/금리 상단 고착 가능성을 키우며, 장단기 risk management scenario 축소는 경기 둔화 시그널로도 해석된다. 결론적으로 종목 자체 모멘텀 부재 속에서, 거시 ‘금리 변수’가 단기 가격 방향성을 좌우할 가능성이 높다.
+
+**Domain Score**: [Bull Score: 📈 38 / Bear Score: 📉 62]
+---
+
+### fundamentals_report
+### Fundamental Analysis
+> ⚡ **Quick Pulse**: #실적급증 #운전자본_현금흐름리스크 #재무레버리지상승
+**Analyst Findings**: 080220.KQ(제주반도체)는 2026-06-30 분기 기준 매출 289,938,012,130원, 영업이익 121,871,077,130원, 당기순이익(소수지분 포함) 145,019,505,410원을 기록하며 전년/직전 대비 실적이 크게 개선됐다. 2026-06-30 분기 EBITDA는 183,312,926,320원이며, 레버리지 관련으로 총부채 139,735,873,840원(장단기 포함)과 순부채 25,175,387,990원이 관찰된다. 다만 재무구조 측면에서 현금 및 단기투자(현금 등) 154,532,009,480원으로 유동성은 보유하나, 2026-06-30 분기 영업현금흐름은 -20,946,309,640원, 잉여현금흐름(FCF)은 -26,337,257,330원으로 현금창출이 일시적으로 약화됐다. 운전자본 항목에서 매출채권/재고 등 변동으로 인한 현금 유출(예: 결제/채권 회수 관련 큰 변동)이 확인되어 단기 현금흐름 리스크가 존재한다. 2026-06-30 분기 자본총계는 446,897,335,920원, 유형자산 순자산(유형순자산/유형장부가)은 443,260,540,590원대로 자산 기반은 두텁다.
+
+**Debate Summary**: 강세 측은 2026년 2분기(080220.KQ)에서 매출과 영업이익, 순이익이 동반 급증하며 수익성이 회복됐고, EBITDA도 높은 수준을 유지해 본업 체력이 강화됐다고 본다. 또한 현금성자산과 단기투자가 큰 폭으로 존재해(약 1,545억 원) 단기 유동성 방어가 가능하다고 평가한다. 반면 약세 측은 같은 기간 잉여현금흐름이 -263억 원으로 전환되고, 운전자본(매출채권/재고 등) 변동이 현금 유출을 주도해 실적 대비 현금 전환이 부진하다고 지적한다. 또한 총부채/순부채 변동이 있어(순부채가 증가 구간) 금리·자금조달 환경에 따라 재무 부담이 확대될 수 있다는 점이 리스크로 제기된다.
+
+**Domain Score**: [Bull Score: 📈 62 / Bear Score: 📉 38]
+---
+
+### investment_plan
+**Market Bias**: BALANCED (Neutral & Mixed Signals)
+
+**Rationale**: 080220.KQ shows a clear positive inflection in reported profitability (revenue, operating profit, net income and EBITDA all improved materially in the latest cited quarter) and the technical structure remains firmly constructive (price above 10‑day EMA, 50‑day SMA and 200‑day SMA; MACD histogram positive). However, the debate also highlights a meaningful quality-of-earnings and regime risk offset: operating cash flow and free cash flow are negative in the same period, implying weak cash conversion and potential working-capital or sustainability questions that are not yet resolved. At the same time, signals of short-term extension (RSI near 70 and price above the upper Bollinger Band) combined with limited observable external catalysts/news flow and a higher long-end rate backdrop raise the probability of volatility and valuation compression even if the long-term trend remains intact. Netting these, the evidence does not justify a decisively bullish regime call, but neither does it support a bearish breakdown thesis while trend and profitability metrics remain strong—therefore the regime is best characterized as mixed/transitionary.
+
+**Key Thresholds to Monitor**: Key Price & Indicator Thresholds to Monitor for 080220.KQ:
+- Trend integrity: whether price can remain above the 50‑day SMA (74,958) and especially the 200‑day SMA (61,267.65). Sustained closes below the 50‑day would indicate momentum cooling; loss of the 200‑day would indicate a regime shift.
+- Near-term momentum/extension: RSI behavior around the 70 level (current cited ~68.4) and whether RSI forms lower highs while price stalls (bearish divergence risk).
+- Volatility/mean reversion: interaction with the Bollinger upper band (87,210.88). Persistent acceptance above the band suggests trend acceleration; rejection back inside the band can signal consolidation/mean reversion.
+- Moving-average support: the 10‑day EMA (80,498.84) as a gauge of short-term momentum—repeated failures to reclaim it after pullbacks would suggest fading impulse.
+- Cash-conversion confirmation: subsequent quarters’ operating cash flow and FCF turning positive, plus evidence of working-capital normalization (receivables/inventory days stabilizing). Continued negative OCF/FCF would strengthen the bear case on earnings quality.
+- Liquidity buffer vs. burn: trajectory of cash & short-term investments (154.5bn KRW cited) relative to ongoing FCF; stabilization supports resilience, rapid decline increases financing/valuation risk.
+- Macro sensitivity checkpoint: direction and volatility of long-end yields (e.g., US 10Y). Further sharp yield rises would typically pressure long-duration growth valuations; stabilization would reduce that headwind.
+
+### trader_investment_plan
+### Trader's Initial Strategy & Summary
+**Initial Action**: Hold
+
+**Score Synthesis & Rationale**: 080220.KQ는 최신 분기 실적에서 매출·영업이익·순이익·EBITDA가 모두 개선되는 등 이익 체력 측면의 긍정 신호가 확인되었고, 차트도 10일 EMA/50일 SMA/200일 SMA 상방 및 MACD 히스토그램 양(+) 흐름으로 중기 추세는 우호적입니다. 다만 같은 기간 영업현금흐름과 자유현금흐름이 부(-)로 나타나 현금 전환력/지속가능성에 대한 의문이 남아 있어 실적의 ‘질’이 완전히 해소되지 않은 국면입니다. 여기에 RSI가 70 부근(약 68.4)으로 단기 과열 신호가 존재하고 가격이 볼린저 상단대에 근접/상회하는 확장 국면 특성상, 촉매 부재 속에서 장단기 금리(특히 장기금리) 변동성 확대 시 밸류에이션 압박과 변동성/되돌림 리스크가 커질 수 있습니다. 따라서 현재는 추세(중기)와 실적(이익) 개선이 지지하되, 현금흐름/과열·밸류 리스크가 상쇄하는 ‘균형·전환’ 성격이 강해 단정적 강세 또는 약세보다 관망(Hold) 구간의 분석적 우위가 존재합니다.
+---
+
+### final_trade_decision
+### Integrated Market Perspectives
+> ⚡ **Executive Pulse**: #추세강화_과열경계 #현금전환미확인 #장기금리부담 #뉴스공백
+
+**Risk & Market Synthesis**: 080220.KQ는 가격이 10일 EMA(80,498.84)·50일 SMA(74,958)·200일 SMA(61,267.65)를 모두 상회하고 MACD 히스토그램(+2,005.05)이 확대되는 등 ‘모멘텀 우위’가 뚜렷하다. 반면 RSI 68.42 및 상단 볼린저(UB 87,210.88) 상회는 단기 확장/과열 구간을 시사하며, ATR 5,386.60은 되돌림 시 변동성 비용(갭/급락 가능 구간 확대)을 내포한다. 펀더멘털은 매출·영업이익·순이익·EBITDA가 크게 개선됐으나, 동기간 영업현금흐름(-20.95bn KRW)과 FCF(-26.34bn KRW)가 음수로 ‘이익→현금 전환’의 확인이 지연되어 밸류 재평가가 흔들릴 수 있다. 외부 촉매(뉴스/리테일 심리) 데이터 공백으로 사건 기반 방향성 판단이 약하며, 거시적으로 장기금리(미 10Y 5.24%까지 상승) 재상승은 멀티플 압박/변동성 확대의 구조적 헤드윈드로 작동 가능하다. 따라서 모멘텀의 상방 잠재력과 현금흐름·금리·과열 리스크가 충돌하는 ‘혼재 레짐’으로 해석된다.
+
+**Strategic Scenario Map (시나리오 맵)**:
+1. **Bullish Extension Scenario (상방 확장)**: [Bullish Extension: 추세 확장 수용]
+- 기술 트리거: 종가 기준으로 볼린저 상단(87,210.88) 상회 영역에서 ‘재차 이탈 없이’ 가격이 수용(acceptance)되며, 10일 EMA(80,498.84) 위에서 되돌림이 제한되는 구조가 반복될 때. RSI는 70 상향 돌파 후 급격한 하락(다이버전스) 없이 고점권 체류가 이어지고, MACD 히스토그램이 양(+)을 유지하거나 추가 확대되는지 관찰.
+- 레인지 상향 기준: 기존 상단 돌파가 ‘단발성 윗꼬리’가 아니라 여러 거래일에 걸친 종가 기준 상단 유지로 확인될 때(확장 밴드 + 추세 채널 상향).
+- 펀더멘털/퀄리티 확인: 다음 분기에서 영업현금흐름·FCF가 개선(음수 축소 또는 플러스 전환)되고 운전자본 변동성이 완화되는 신호가 동반될 경우, 이익 개선의 신뢰도가 상승해 모멘텀 지속 조건이 강화.
+- 거시 완화 조건: 장기금리(특히 10Y)의 상승세가 둔화/안정화되면 성장/기술 밸류 압박이 완화되어 추세 확장 지속 확률이 상승.
+2. **Neutral Consolidation Scenario (횡보 및 박스권)**: [Neutral Consolidation: 확장 후 소화/박스]
+- 기술 범위: 가격이 볼린저 상단 상회 이후 밴드 내부로 재진입하되(UB 87,210.88 하회), 10일 EMA(80,498.84)~50일 SMA(74,958) 구간이 ‘조정의 하단 완충대’로 기능하면서 횡보·계단식 조정이 진행되는 경우. 
+- 모멘텀 형태: RSI가 60~70 사이에서 식으며(과열 해소) MACD 히스토그램이 양(+)이지만 축소되는 ‘속도 조절’ 국면.
+- 대기 기준: (1) 87,210.88 상단 재돌파로 재가속 확인 또는 (2) 74,958(50일) 부근까지의 평균회귀 후 지지력 확인 중 하나가 나타나기 전까지는 방향성 신뢰도가 낮은 관찰 구간.
+- 펀더멘털 대기: 현금흐름(OCF/FCF) 정상화 여부, 운전자본(재고/매출채권) 안정 신호가 확인되면 박스 상단 돌파의 펀더멘털 신뢰가 강화되고, 반대로 음수 지속 시 박스 상단에서 공급(차익실현) 압력이 커질 수 있음.
+3. **Downside Invalidation Scenario (하방 리스크)**: [Downside Invalidation: 추세 훼손/레짐 전환]
+- 1차 경고: 10일 EMA(80,498.84) 이탈 후 단기간 내 회복 실패가 반복되며 RSI가 70 부근에서 하락 전환(낮은 고점)하는 약세 다이버전스가 발생할 때.
+- 구조적 훼손: 50일 SMA(74,958) 종가 기준 이탈이 지속되면 중기 추세의 ‘균열’로 해석되며, 이 경우 변동성(ATR) 기반 하방 확장이 나타날 수 있음.
+- 레짐 전환 레벨: 200일 SMA(61,267.65) 접근/이탈은 장기 추세 훼손으로의 전환 신호로 간주될 수 있으며, 이 구간에서는 멀티플 디레이팅과 위험회피 심리가 결합될 가능성.
+- 매크로/멀티플 압박 요인: 미 10Y 추가 급등(할인율 상승), risk management scenario 축소 심화, 위험자산 변동성 확대는 반도체/기술 밸류에이션 압박을 증폭. 
+- 펀더멘털 촉발 요인: 다음 분기에도 OCF/FCF 음수가 확대되거나 현금성자산 감소 속도가 빨라지는 경우(유동성 완충 약화), ‘이익의 질’ 재평가로 하방 시나리오 확률이 상승.
+
+**Investment Thesis** [#추세강화_과열경계 #현금전환미확인 #장기금리부담 #뉴스공백]:
+세 리스크 관점의 교집합은 ‘가격/모멘텀은 강하지만(전 이동평균 상회, MACD 양(+) 확대) 단기 확장(볼린저 상단 상회, RSI 70 근접)과 변동성(ATR)로 조정 비용이 커질 수 있다’는 점이다. 공격 측이 강조한 추세 가속 가능성은 기술적으론 타당하나, 보수·중립이 지적한 현금흐름(OCF/FCF 음수) 기반의 이익-현금 전환 미확인과 장기금리 재상승(할인율 압력)은 모멘텀 구간에서 ‘멀티플 압축/급조정’의 트리거로 작동할 수 있다. 또한 뉴스/리테일 심리 데이터 공백은 촉매 기반 확률 업데이트가 어렵게 만들어 신호의 불확실성을 높인다. 따라서 현재 레짐은 ‘중기 상방 우위 + 단기 과열/퀄리티·금리 리스크 상쇄’의 혼재 구간으로 정리되며, 관찰 포인트는 (1) 10일/50일선 위에서의 가격 수용 여부, (2) 볼린저 상단 돌파의 지속성, (3) 차기 분기 현금흐름 정상화, (4) 장기금리 안정 여부로 압축된다.
+
+==================================================
+MULTI-AGENT CONSENSUS: **BALANCED (Neutral & Mixed Signals)**
+==================================================
+
+==================================================
+[Disclaimer / 법적 고지]
+This report is an automated quantitative research summary synthesized by AI multi-agents based on publicly available market data. It does NOT constitute financial advice, investment recommendations, or an endorsement to buy or sell securities. All investment decisions and associated risks rest solely with the user.
+
+본 보고서는 AI 멀티 에이전트 시스템이 공시 데이터 및 기술 지표를 바탕으로 자동 생성한 정량적 관측 요약본이며, 금융투자상품의 매수/매도를 권유하거나 투자 자문을 제공하지 않습니다. 모든 투자 판단과 책임은 투자자 본인에게 있습니다.
+==================================================

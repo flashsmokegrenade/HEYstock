@@ -53,9 +53,29 @@ def create_sentiment_analyst(llm):
         start_date = _seven_days_back(end_date)
         instrument_context = get_instrument_context_from_state(state)
 
-        # Pre-fetch sources (News + StockTwits only)
+        # Pre-fetch sources (News + StockTwits / KR News RSS)
         news_block = get_news.func(ticker, start_date, end_date)
-        stocktwits_block = fetch_stocktwits_messages(ticker, limit=30)
+
+        # [국내 vs 해외 센티멘트 데이터 소스 자동 분기]
+        is_kr = ticker.endswith((".KS", ".KQ")) or (len(ticker) == 6 and ticker.isdigit())
+
+        if is_kr:
+            try:
+                from kr_news_rss import get_kr_stock_news
+                kr_news = get_kr_stock_news(ticker, limit=10)
+                if kr_news:
+                    lines = [f"- [{item['press']}] {item['title']}" for item in kr_news]
+                    stocktwits_block = (
+                        "[참고: 국내 종목으로 StockTwits 대신 실시간 국내 주요 언론 헤드라인을 분석 소스로 제공합니다]\n"
+                        + "\n".join(lines)
+                    )
+                else:
+                    stocktwits_block = "<국내 뉴스 수집 데이터 없음>"
+            except Exception as e:
+                stocktwits_block = f"<국내 뉴스 RSS 수집 오류: {e}>"
+        else:
+            # 미국/해외 주식: 기존 StockTwits 소셜 데이터 유지
+            stocktwits_block = fetch_stocktwits_messages(ticker, limit=30)
 
         system_message = _build_system_message(
             ticker=ticker,
